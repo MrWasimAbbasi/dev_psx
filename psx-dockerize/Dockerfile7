@@ -1,0 +1,55 @@
+# Use official PHP 7.4 image with Apache
+FROM php:7.4-apache
+
+# Install required PHP extensions
+RUN apt-get update && apt-get install -y \
+    libzip-dev \
+    unzip \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libmagickwand-dev imagemagick\
+    zip \
+    curl \
+    && docker-php-ext-install pdo pdo_mysql zip mbstring exif pcntl bcmath gd calendar
+
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
+
+# Set the working directory
+WORKDIR /var/www/html
+
+COPY ./pdftk/pdftk.jar /usr/share/pdftk/
+COPY ./pdftk/commons-lang3.jar /usr/share/java/
+COPY ./pdftk/bcprov-1.58.jar /usr/share/java/
+COPY ./pdftk/pdftk /usr/bin/
+RUN chmod +x /usr/bin/pdftk
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# PECL extensions
+RUN pecl install imagick redis xdebug-3.1.5 mongodb-1.7.5 && \
+    docker-php-ext-enable imagick redis xdebug mongodb
+
+RUN echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini && \
+    echo "extension=mongodb.so" > /usr/local/etc/php/conf.d/mongodb.ini
+
+# Apache document root setup
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf && \
+    sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf && \
+    a2enmod rewrite
+
+# Node.js & npm using NVM
+ENV NVM_DIR /root/.nvm
+ENV NODE_VERSION 8.17.0
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash && \
+    . $NVM_DIR/nvm.sh && \
+    nvm install $NODE_VERSION && \
+    nvm use $NODE_VERSION && \
+    nvm alias default $NODE_VERSION && \
+    ln -s $NVM_DIR/versions/node/$NODE_VERSION/bin/node /usr/bin/node && \
+    ln -s $NVM_DIR/versions/node/$NODE_VERSION/bin/npm /usr/bin/npm && \
+    ln -s $NVM_DIR/versions/node/$NODE_VERSION/bin/node /usr/bin/nodejs
+
+EXPOSE 80

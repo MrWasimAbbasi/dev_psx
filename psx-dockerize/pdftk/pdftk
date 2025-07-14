@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+mainclass='com.gitlab.pdftk_java.pdftk'
+jar='/usr/share/pdftk/pdftk.jar'
+libs='/usr/share/java/commons-lang3.jar:/usr/share/java/bcprov-1.58.jar'
+
+exec java -cp "$jar:$libs" "$mainclass" "$@" 

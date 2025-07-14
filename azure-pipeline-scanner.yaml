@@ -1,0 +1,78 @@
+name: $(SourceBranchName)-$(Date:yyMMdd)$(Rev:.r)-psx-push-scanner
+pr: none
+trigger: none
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily midnight build
+  branches:
+    include:
+    - master
+
+variables:
+  nodeVersion: "8.x"
+  npm_config_cache: $(Pipeline.Workspace)/.npm
+
+jobs:
+- job: 'Build'
+  pool:
+    vmImage: 'ubuntu-18.04'
+
+  steps:
+
+    - task: NodeTool@0
+      displayName: 'Set node/npm version'
+      inputs:
+        versionSpec: '$(nodeVersion)'
+
+    - task: Cache@2
+      inputs:
+        key: 'npm | "$(Agent.OS)" | package-lock.json'
+        restoreKeys: |
+           npm | "$(Agent.OS)"
+        path: $(npm_config_cache)
+      displayName: Cache npm
+
+    - task: Npm@1
+      displayName: 'Npm install'
+      inputs:
+        command: ci
+        verbose: true
+
+    - script: |
+        [ -d scanner-output ] || mkdir -p scanner-output
+        wget "https://github.com/jeremylong/DependencyCheck/releases/download/v6.0.3/dependency-check-6.0.3-release.zip" -O dependency-check.zip
+        wget "https://github.com/jeremylong/DependencyCheck/releases/download/v6.0.3/dependency-check-6.0.3-release.zip.asc" -O dependency-check.zip.asc
+        gpg --keyserver hkp://keys.gnupg.net --recv-keys F9514E84AE3708288374BBBE097586CFEA37F9A6
+        gpg --verify dependency-check.zip.asc dependency-check.zip && unzip dependency-check.zip
+        chmod +x dependency-check/bin/dependency-check.sh
+        dependency-check/bin/dependency-check.sh --format HTML --format JSON -s . --out scanner-output/ --project psx-push  --enableExperimental
+        rm -r dependency-check
+        rm dependency-check.zip
+      displayName: 'Check dependencies'
+
+    # This only works on Windows and I don't want to retool everything for that.
+    # - task: dependency-check-build-task@5
+    #   inputs:
+    #     projectName: 'psx-push'
+    #     scanPath: '.'
+    #     format: 'HTML, JSON'
+    #     reportsDirectory: 'scanner-output'
+    #     enableExperimental: true
+
+    - task: SonarQubePrepare@4
+      inputs:
+        SonarQube: 'PSX Push SonarQube'
+        scannerMode: 'CLI'
+        configMode: 'file'
+
+    - task: SonarQubeAnalyze@4
+
+    - script: |
+        cp -r scanner-output/dependency-check-report.html $(Build.ArtifactStagingDirectory)/
+      displayName: 'Stage relevant files'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish'
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)/dependency-check-report.html'
+        artifactName: 'dependency-check-report'

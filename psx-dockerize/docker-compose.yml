@@ -1,0 +1,130 @@
+version: '3.7'
+services:
+  laravel:
+    build: .
+    volumes:
+      - ./src:/var/www/html
+    expose:
+      - "80"
+    environment:
+      APACHE_DOCUMENT_ROOT: /var/www/html/public
+    depends_on:
+      - "database"
+      - "mongo"
+      - "redis"
+  laravel7:
+    build: .
+    volumes:
+      - ./src:/var/www/html
+    expose:
+      - "80"
+    environment:
+      APACHE_DOCUMENT_ROOT: /var/www/html/public
+    depends_on:
+      - "database"
+      - "mongo"
+      - "redis"
+  laravel8:
+    build:
+      dockerfile: Dockerfile8
+    volumes:
+      - ../../psxascend:/var/www/html
+    expose:
+      - "80"
+    environment:
+      APACHE_DOCUMENT_ROOT: /var/www/html/public
+    depends_on:
+      - "database"
+      - "mongo"
+      - "redis"
+  laravel9:
+    build:
+      dockerfile: Dockerfile9
+    volumes:
+      - ../../psxascend:/var/www/html
+    expose:
+      - "80"
+    environment:
+      APACHE_DOCUMENT_ROOT: /var/www/html/public
+    depends_on:
+      - "database"
+      - "mongo"
+      - "redis"
+  laravel12:
+    build:
+      dockerfile: Dockerfile12
+    volumes:
+      - ../../psxascend:/var/www/html
+    expose:
+      - "80"
+    environment:
+      APACHE_DOCUMENT_ROOT: /var/www/html/public
+        - VITE_HOST=0.0.0.0
+    depends_on:
+      - "database"
+      - "mongo"
+      - "redis"
+# LOCAL
+  database:
+    image: mariadb:10.2
+    container_name: psx-database
+    environment:
+      LANG: C.UTF-8
+      MYSQL_ROOT_PASSWORD:
+      MYSQL_DATABASE:
+      MYSQL_USER:
+      MYSQL_PASSWORD:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+    volumes:
+      - psx_data:/var/lib/mysql
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+  mongo:
+    image: mongo
+    environment:
+      MONGO_INITDB_DATABASE: psx_data
+    volumes:
+        - psx_mongo_data:/data/db
+# STAGING_PRODUCTION
+#    image: alpine:latest
+#    container_name: psx-database
+#    environment:
+#      LANG: C.UTF-8
+#      MYSQL_ROOT_PASSWORD:
+#      MYSQL_DATABASE:
+#      MYSQL_USER:
+#      MYSQL_PASSWORD:
+#      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+#    command: sh -c "apk update && apk add openssh-client && while true; do ssh -i /home/usafhassan/.ssh/_stil -nNT -L *:3306:balder-1.cfayxmxwecjj.us-west-2.rds.amazonaws.com:3306 ubuntu@ec2-35-166-165-115.us-west-2.compute.amazonaws.com; done"
+#    volumes:
+#      - ~/.ssh:/root/.ssh:ro
+#    expose:
+#      - 3306
+#
+  mongo-express:
+    image: mongo-express
+    depends_on:
+      - "mongo"
+  redis:
+    image: redis
+  websocket:
+    build: ./websocket
+    environment:
+      REDIS_DB: 0
+      REDIS_FAMILY: 4
+      REDIS_HOST: redis
+      REDIS_PASSWORD: 
+      REDIS_PORT: 6379
+  minio:
+    image: minio/minio
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER:
+      MINIO_ROOT_PASSWORD:
+
+    
+volumes:
+  psx_data:
+  psx_mongo_data:
+  minio_data:

@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <h1>Alive!</h1>
+    <script>
+        var server = 'https://push.psxdigital.com';
+        var socket = io.connect(server);
+
+        socket.on('info', function(data) {
+            console.log(data);
+        });
+    </script>
+  </body>
+</html>
+  

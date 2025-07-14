@@ -1,0 +1,5 @@
+.env
+.idea/
+firebase/*
+node_modules/
+tls/*

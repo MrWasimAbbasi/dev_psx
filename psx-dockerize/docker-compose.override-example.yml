@@ -1,0 +1,27 @@
+version: '3.7'
+services:
+    laravel:
+        ports:
+            - "8000:80"
+        volumes:
+            - ./php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+            - ./php/error_reporting.ini:/usr/local/etc/php/conf.d/error_reporting.ini
+    database:
+        ports:
+            - "3306:3306"
+    mongo:
+        ports:
+            - "27017:27017"
+    mongo-express:
+        ports:
+            - "8001:8081"
+    redis:
+        ports:
+            - "6379:6379"
+    websocket:
+        ports:
+            - "3000:3000"
+    minio:
+        ports:
+            - "9000:9000"
+            - "9001:9001"
