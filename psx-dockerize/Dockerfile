@@ -1,6 +1,11 @@
 FROM php:7.2-apache
 
-RUN sed -i 's/stable\/updates/stable-security\/updates/' /etc/apt/sources.list
+# Debian Buster is EOL; use the archive mirrors so apt still works.
+RUN sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list \
+    && sed -i 's|security.debian.org|archive.debian.org|g' /etc/apt/sources.list \
+    && sed -i '/buster-updates/d' /etc/apt/sources.list \
+    && sed -i 's/stable\/updates/stable-security\/updates/' /etc/apt/sources.list \
+    && printf 'Acquire::Check-Valid-Until "false";\n' > /etc/apt/apt.conf.d/99no-check-valid-until
 RUN apt-get update --fix-missing
 
 RUN mkdir -p /usr/share/man/man1

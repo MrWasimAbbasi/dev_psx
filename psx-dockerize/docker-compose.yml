@@ -12,62 +12,68 @@ services:
       - "database"
       - "mongo"
       - "redis"
-  laravel7:
-    build: .
-    volumes:
-      - ./src:/var/www/html
-    expose:
-      - "80"
-    environment:
-      APACHE_DOCUMENT_ROOT: /var/www/html/public
-    depends_on:
-      - "database"
-      - "mongo"
-      - "redis"
-  laravel8:
-    build:
-      dockerfile: Dockerfile8
-    volumes:
-      - ../../psxascend:/var/www/html
-    expose:
-      - "80"
-    environment:
-      APACHE_DOCUMENT_ROOT: /var/www/html/public
-    depends_on:
-      - "database"
-      - "mongo"
-      - "redis"
-  laravel9:
-    build:
-      dockerfile: Dockerfile9
-    volumes:
-      - ../../psxascend:/var/www/html
-    expose:
-      - "80"
-    environment:
-      APACHE_DOCUMENT_ROOT: /var/www/html/public
-    depends_on:
-      - "database"
-      - "mongo"
-      - "redis"
-  laravel12:
-    build:
-      dockerfile: Dockerfile12
-    volumes:
-      - ../../psxascend:/var/www/html
-    expose:
-      - "80"
-    environment:
-      APACHE_DOCUMENT_ROOT: /var/www/html/public
-        - VITE_HOST=0.0.0.0
-    depends_on:
-      - "database"
-      - "mongo"
-      - "redis"
+  # Optional PHP variants — start with: docker compose --profile ascend up -d
+#  laravel7:
+#    profiles: ["ascend"]
+#    build: .
+#    volumes:
+#      - ./src:/var/www/html
+#    expose:
+#      - "80"
+#    environment:
+#      APACHE_DOCUMENT_ROOT: /var/www/html/public
+#    depends_on:
+#      - "database"
+#      - "mongo"
+#      - "redis"
+#  laravel8:
+#    profiles: ["ascend"]
+#    build:
+#      dockerfile: Dockerfile8
+#    volumes:
+#      - ../../psxascend:/var/www/html
+#    expose:
+#      - "80"
+#    environment:
+#      APACHE_DOCUMENT_ROOT: /var/www/html/public
+#    depends_on:
+#      - "database"
+#      - "mongo"
+#      - "redis"
+#  laravel9:
+#    profiles: ["ascend"]
+#    build:
+#      dockerfile: Dockerfile9
+#    volumes:
+#      - ../../psxascend:/var/www/html
+#    expose:
+#      - "80"
+#    environment:
+#      APACHE_DOCUMENT_ROOT: /var/www/html/public
+#    depends_on:
+#      - "database"
+#      - "mongo"
+#      - "redis"
+#  laravel12:
+#    profiles: ["ascend"]
+#    build:
+#      dockerfile: Dockerfile12
+#    volumes:
+#      - ../../psxascend:/var/www/html
+#    expose:
+#      - "80"
+#    environment:
+#      APACHE_DOCUMENT_ROOT: /var/www/html/public
+#      VITE_HOST: "0.0.0.0"
+#    depends_on:
+#      - "database"
+#      - "mongo"
+#      - "redis"
 # LOCAL
   database:
     image: mariadb:10.2
     container_name: psx-database
+    restart: unless-stopped
     environment:
       LANG: C.UTF-8
       MYSQL_ROOT_PASSWORD:
@@ -80,6 +86,7 @@ services:
     command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
   mongo:
     image: mongo
+    restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: psx_data
     volumes:
@@ -111,6 +118,7 @@ services:
       - "mongo"
   redis:
     image: redis
+    restart: unless-stopped
   websocket:
     build: ./websocket
     environment:
@@ -121,6 +129,7 @@ services:
       REDIS_PORT: 6379
   minio:
     image: minio/minio
+    restart: unless-stopped
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
@@ -128,7 +137,16 @@ services:
       MINIO_ROOT_USER:
       MINIO_ROOT_PASSWORD:
 
-    
+  # Local Twilio browser phone. UI: http://localhost:3001 (mapped in override).
+  # Use TWILIO_DEV_PHONE_NUMBER spare only — never the Website virtnum.
+  twilio-dev-phone:
+    build: ./dev-phone
+    restart: unless-stopped
+    environment:
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_DEV_PHONE_NUMBER: ${TWILIO_DEV_PHONE_NUMBER:-}
+
 volumes:
   psx_data:
   psx_mongo_data:
