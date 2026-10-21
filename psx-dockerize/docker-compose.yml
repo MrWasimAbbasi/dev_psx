@@ -1,4 +1,9 @@
-version: '3.7'
+# One project: CRM, CRM databases, the follow-up agent, the agent database, and the agent UI.
+#   docker compose up -d --build
+# Agent service definitions live in psx-ai-control-plane/docker-compose.yml.
+include:
+  - path: ./psx-ai-control-plane/docker-compose.yml
+
 services:
   laravel:
     build: .
@@ -128,7 +133,11 @@ services:
       REDIS_PASSWORD: 
       REDIS_PORT: 6379
   minio:
-    image: minio/minio
+    # Docker Hub minio/minio was removed. Build from the binary in minio.deb.
+    build:
+      context: ./minio-local
+    image: psx-minio:local
+    pull_policy: never
     restart: unless-stopped
     volumes:
       - minio_data:/data

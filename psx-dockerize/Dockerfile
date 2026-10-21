@@ -36,8 +36,18 @@ RUN curl --silent --show-error https://getcomposer.org/installer | \
     php -- --install-dir=/usr/local/bin --filename=composer
 
 RUN pecl install imagick
-RUN pecl install mongodb-1.9.2 && \
-    docker-php-ext-enable mongodb
+# PHP 7.2's pecl client can no longer list releases on pecl.php.net
+# ("No releases available for package"). Install the same pinned tarball directly.
+RUN curl -fsSL -o /tmp/mongodb-1.9.2.tgz https://pecl.php.net/get/mongodb-1.9.2.tgz \
+    && tar -xzf /tmp/mongodb-1.9.2.tgz -C /tmp \
+    && cd /tmp/mongodb-1.9.2 \
+    && phpize \
+    && ./configure \
+    && make -j"$(nproc)" \
+    && make install \
+    && cd / \
+    && rm -rf /tmp/mongodb-1.9.2 /tmp/mongodb-1.9.2.tgz \
+    && docker-php-ext-enable mongodb
 
 RUN echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini && \
     echo "extension=mongodb.so" > /usr/local/etc/php/conf.d/mongodb.ini
@@ -64,4 +74,14 @@ RUN mkdir $HOME/.nvm && \
 
 RUN npm install gulp -g
 
-RUN pecl install xdebug-3.1.5 && docker-php-ext-enable xdebug
+# Same pecl channel failure as mongodb. xdebug 3.1.5 is the last release that supports PHP 7.2.
+RUN curl -fsSL -o /tmp/xdebug-3.1.5.tgz https://pecl.php.net/get/xdebug-3.1.5.tgz \
+    && tar -xzf /tmp/xdebug-3.1.5.tgz -C /tmp \
+    && cd /tmp/xdebug-3.1.5 \
+    && phpize \
+    && ./configure \
+    && make -j"$(nproc)" \
+    && make install \
+    && cd / \
+    && rm -rf /tmp/xdebug-3.1.5 /tmp/xdebug-3.1.5.tgz \
+    && docker-php-ext-enable xdebug

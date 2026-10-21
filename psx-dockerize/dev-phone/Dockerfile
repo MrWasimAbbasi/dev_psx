@@ -3,7 +3,8 @@ FROM node:22-bookworm-slim
 # Twilio Dev Phone is a Twilio CLI plugin (Node 18+). Do not put this in the
 # PHP 7.2 Laravel image — that image ships Node 8 for Gulp only.
 
-RUN apt-get update \
+RUN printf 'Acquire::Retries "5";\n' > /etc/apt/apt.conf.d/80-retries \
+    && apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates git \
     && rm -rf /var/lib/apt/lists/*
 
