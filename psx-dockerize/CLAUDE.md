@@ -1,7 +1,7 @@
 # psx-dockerize — local Docker stack for the PSX CRM and the AI Control Plane
 
 ## Purpose
-Runs the PSX CRM (`./src`, Laravel 6 / PHP 7.2) and its services locally in Docker, and — through
+Runs the PSX CRM (`./src`, Laravel 13 / PHP 8.5) and its services locally in Docker, and — through
 `include:` in `docker-compose.yml` — the AI Control Plane stack from `./psx-ai-control-plane/`.
 This repo holds infrastructure only: Dockerfiles, compose files, PHP/xdebug config, the websocket
 (socket.io) service, a local MinIO (S3 stand-in) and the Twilio dev phone. Application code lives in
@@ -32,7 +32,7 @@ The agent stack keeps its own ports (web 8090, UI 5174, MySQL 3317, Redis 6380 �
 ## How to test
 There are no tests in this repo. Check a change by rebuilding (`docker compose up -d --build`) and
 opening the CRM on its mapped port. CRM tests run inside the `laravel` container
-(`vendor/bin/phpunit`); after any CRM PHP edit run `src/scripts/verify-php72-laravel6.sh <files>`.
+(`vendor/bin/phpunit`); after any CRM PHP edit lint it with PHP 8.5 (`src/.cursor/rules/php72-laravel6-verify.mdc`).
 Control-plane tests: `cd psx-ai-control-plane && php artisan test`.
 
 ## Structure
@@ -40,7 +40,8 @@ Control-plane tests: `cd psx-ai-control-plane && php artisan test`.
 |------|------------|
 | `docker-compose.yml` | Services: `laravel` (CRM, Apache), `database` (MariaDB 10.2), `mongo`, `mongo-express`, `redis`, `websocket`, `minio`, `twilio-dev-phone`; includes the agent compose |
 | `docker-compose.override-example.yml` | Template for host port mappings (copy to `docker-compose.override.yml`) |
-| `Dockerfile` | CRM image (PHP 7.2 + Apache). `Dockerfile7/8/9/12` are optional PHP variants for the `ascend` profile (commented out) |
+| `Dockerfile85` | CRM image used by `laravel` (PHP 8.5 + Apache, mongodb/imagick/ftp/xdebug) |
+| `Dockerfile` | Previous CRM image (PHP 7.2 + Apache) for branches before the Laravel 13 upgrade. `Dockerfile7/8/9/12` are optional PHP variants for the `ascend` profile (commented out) |
 | `php/` | PHP and xdebug ini files mounted into the CRM image |
 | `websocket/` | socket.io broadcast service (reads Redis) |
 | `minio-local/` | Builds MinIO from the bundled binary (Docker Hub image was removed) |

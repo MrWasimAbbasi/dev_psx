@@ -6,7 +6,10 @@ include:
 
 services:
   laravel:
-    build: .
+    # PHP 8.5 image for the Laravel 13 CRM. Dockerfile (PHP 7.2) still builds branches before the upgrade.
+    build:
+      context: .
+      dockerfile: Dockerfile85
     volumes:
       - ./src:/var/www/html
     expose:
